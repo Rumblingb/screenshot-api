@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot API - Webpage Screenshots via REST API</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #222240;
+            --text-primary: #e8e8f0;
+            --text-secondary: #8888a0;
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-dark: #4f46e5;
+            --success: #22c55e;
+            --border: #2a2a3e;
+            --gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+        /* Nav */
+        nav {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links { display: flex; gap: 28px; align-items: center; }
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--text-primary); }
+
+        /* Hero */
+        .hero {
+            padding: 100px 0 80px;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+        .hero .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.3); }
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { border-color: var(--accent); }
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(34,197,94,0.3); }
+
+        /* Features */
+        .features {
+            padding: 80px 0;
+            border-top: 1px solid var(--border);
+        }
+        .features h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 50px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            transition: all 0.2s;
+        }
+        .feature-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-3px);
+        }
+        .feature-card .icon { font-size: 2rem; margin-bottom: 16px; }
+        .feature-card h3 { font-size: 1.1rem; margin-bottom: 12px; }
+        .feature-card p { color: var(--text-secondary); font-size: 0.9rem; }
+
+        /* Pricing */
+        .pricing {
+            padding: 80px 0;
+            border-top: 1px solid var(--border);
+        }
+        .pricing h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+        .pricing .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 50px;
+        }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 28px;
+            max-width: 750px;
+            margin: 0 auto;
+        }
+        .pricing-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 36px;
+            text-align: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .pricing-card.featured {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+        .pricing-card.featured::before {
+            content: "POPULAR";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gradient);
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .pricing-card .plan-name {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .pricing-card .price {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 16px 0;
+        }
+        .pricing-card .price span {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+        .pricing-card .description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+        }
+        .pricing-card ul {
+            list-style: none;
+            text-align: left;
+            margin: 24px 0;
+        }
+        .pricing-card ul li {
+            padding: 8px 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .pricing-card ul li::before {
+            content: "✓";
+            color: var(--success);
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        /* API Docs */
+        .docs {
+            padding: 80px 0;
+            border-top: 1px solid var(--border);
+        }
+        .docs h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 40px;
+        }
+        .code-block {
+            background: #0d0d1a;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 16px 0;
+            overflow-x: auto;
+        }
+        .code-block code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #a8b4d0;
+            line-height: 1.7;
+        }
+        .code-block .comment { color: #6a7b8a; }
+        .code-block .keyword { color: #c792ea; }
+        .code-block .string { color: #c3e88d; }
+        .code-block .url { color: #82aaff; }
+
+        .endpoint {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 16px 0;
+        }
+        .endpoint .method {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+        .endpoint .path {
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+        .endpoint .desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.9rem;
+        }
+        .param-table th, .param-table td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .param-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .pricing-card.featured { transform: none; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <div class="logo">Screenshot API</div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#docs">Docs</a>
+                <a href="https://github.com/Rumblingb/screenshot-api" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Webpage Screenshots,<br>Simple REST API</h1>
+            <p>One API call to capture any webpage as a PNG. No headless browsers to manage, no infrastructure to maintain.</p>
+            <div class="cta-buttons">
+                <a href="#docs" class="btn btn-primary">Get Started Free</a>
+                <a href="#pricing" class="btn btn-secondary">View Pricing</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2>Simple &amp; Powerful</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="icon">⚡</div>
+                    <h3>Instant Screenshots</h3>
+                    <p>Capture any public URL as a high-quality PNG image in milliseconds. Just make a GET request.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🔐</div>
+                    <h3>API Key Auth</h3>
+                    <p>Secure authentication via API keys passed in query params or Authorization header.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">📊</div>
+                    <h3>Usage Tracking</h3>
+                    <p>Monitor your monthly usage with the /usage endpoint. Free tier resets monthly.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🎨</div>
+                    <h3>Custom Viewport</h3>
+                    <p>Set custom width, height, delay, and full-page capture options for every request.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">💰</div>
+                    <h3>Pay-as-you-Grow</h3>
+                    <p>Free tier for testing, Pro tier at $99/mo for production workloads up to 10K screenshots.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">📋</div>
+                    <h3>cURL-Friendly</h3>
+                    <p>Works with any HTTP client. No SDK needed — just a simple GET request with your API key.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <h2>Simple Pricing</h2>
+            <p class="subtitle">Start free, scale when you need more.</p>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="plan-name">Free</div>
+                    <div class="price">$0 <span>/mo</span></div>
+                    <div class="description">Perfect for testing and small projects</div>
+                    <ul>
+                        <li>50 screenshots per month</li>
+                        <li>API key authentication</li>
+                        <li>Usage dashboard</li>
+                        <li>Standard viewport options</li>
+                        <li>Community support</li>
+                    </ul>
+                    <a href="#docs" class="btn btn-secondary" style="width:100%;">Get Started</a>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="plan-name">Pro</div>
+                    <div class="price">$99 <span>/mo</span></div>
+                    <div class="description">For production applications and teams</div>
+                    <ul>
+                        <li>10,000 screenshots per month</li>
+                        <li>Priority API routing</li>
+                        <li>Full-page capture support</li>
+                        <li>Custom viewport sizes</li>
+                        <li>99.9% uptime SLA</li>
+                        <li>Email support</li>
+                    </ul>
+                    <a href="#" id="stripe-buy-btn" class="btn btn-success" style="width:100%;">Subscribe Now</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="docs" class="docs">
+        <div class="container">
+            <h2>API Documentation</h2>
+
+            <h3 style="margin-bottom:20px;">Authentication</h3>
+            <p style="color:var(--text-secondary);margin-bottom:16px;">
+                Get your free API key by signing up. Pass it as a query parameter <code>api_key</code> or in the <code>Authorization: Bearer</code> header.
+            </p>
+
+            <h3 style="margin-bottom:16px;">Endpoints</h3>
+
+            <div class="endpoint">
+                <span class="method">GET</span>
+                <span class="path">/screenshot?url=...</span>
+                <div class="desc">Capture a screenshot of any webpage</div>
+            </div>
+
+            <h4 style="margin:24px 0 12px;">Parameters</h4>
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>url</code></td>
+                        <td>string</td>
+                        <td>Yes</td>
+                        <td>The webpage URL to capture (must include http:// or https://)</td>
+                    </tr>
+                    <tr>
+                        <td><code>api_key</code></td>
+                        <td>string</td>
+                        <td>Yes</td>
+                        <td>Your API key</td>
+                    </tr>
+                    <tr>
+                        <td><code>width</code></td>
+                        <td>integer</td>
+                        <td>No</td>
+                        <td>Viewport width in pixels (default: 1280)</td>
+                    </tr>
+                    <tr>
+                        <td><code>height</code></td>
+                        <td>integer</td>
+                        <td>No</td>
+                        <td>Viewport height in pixels (default: 720)</td>
+                    </tr>
+                    <tr>
+                        <td><code>full_page</code></td>
+                        <td>boolean</td>
+                        <td>No</td>
+                        <td>Capture full page (default: false) — <strong>Pro only</strong></td>
+                    </tr>
+                    <tr>
+                        <td><code>delay</code></td>
+                        <td>integer</td>
+                        <td>No</td>
+                        <td>Delay before capture in ms (default: 1000)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4 style="margin:24px 0 12px;">Example</h4>
+            <div class="code-block">
+                <code>
+                    <span class="comment"># Basic screenshot</span><br>
+                    curl -o screenshot.png "<span class="url">https://screenshot-api.example.com/screenshot?url=https://example.com&api_key=YOUR_API_KEY</span>"<br><br>
+                    <span class="comment"># Custom viewport</span><br>
+                    curl -o screenshot.png "<span class="url">https://screenshot-api.example.com/screenshot?url=https://example.com&width=1920&height=1080&api_key=YOUR_API_KEY</span>"<br><br>
+                    <span class="comment"># With Authorization header</span><br>
+                    curl -H "<span class="string">Authorization: Bearer YOUR_API_KEY</span>" \<br>
+                    &nbsp;&nbsp;"<span class="url">https://screenshot-api.example.com/screenshot?url=https://example.com</span>" -o screenshot.png<br><br>
+                    <span class="comment"># Check usage</span><br>
+                    curl "<span class="url">https://screenshot-api.example.com/usage?api_key=YOUR_API_KEY</span>"
+                </code>
+            </div>
+
+            <div class="endpoint" style="margin-top:24px;">
+                <span class="method">GET</span>
+                <span class="path">/usage</span>
+                <div class="desc">Check your current usage and remaining quota</div>
+            </div>
+
+            <h4 style="margin:24px 0 12px;">Response Example</h4>
+            <div class="code-block">
+                <code>
+                    {<br>
+                    &nbsp;&nbsp;"api_key": "ssapi_abc123...def456",<br>
+                    &nbsp;&nbsp;"tier": "free",<br>
+                    &nbsp;&nbsp;"used": 12,<br>
+                    &nbsp;&nbsp;"limit": 50,<br>
+                    &nbsp;&nbsp;"remaining": 38,<br>
+                    &nbsp;&nbsp;"reset_date": "2026-05-01"<br>
+                    }
+                </code>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>Screenshot API &mdash; Built with FastAPI. &copy; 2026</p>
+        </div>
+    </footer>
+
+    <script>
+        // Handle Stripe payment link
+        document.getElementById('stripe-buy-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            // Replace with your actual Stripe payment link URL once created
+            const stripePaymentLink = 'https://buy.stripe.com/00w4gBflRgAk5zG7Z11oI0E';
+            if (stripePaymentLink) {
+                window.open(stripePaymentLink, '_blank');
+            } else {
+                alert('Stripe payment link not configured yet. Please check back soon.');
+            }
+        });
+    </script>
+</body>
+</html>
